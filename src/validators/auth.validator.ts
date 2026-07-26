@@ -15,6 +15,11 @@ export const registerSchema = z.object({
   clinicName:     z.string().max(100).trim().optional(),
 });
 
+// Admin-created accounts (same rules as register, plus an explicit role)
+export const createUserSchema = registerSchema.extend({
+  role: z.enum(["doctor", "admin"]).default("doctor"),
+});
+
 export const loginSchema = z.object({
   email:    z.string().email().toLowerCase().trim(),
   password: z.string().min(1, "Password is required"),

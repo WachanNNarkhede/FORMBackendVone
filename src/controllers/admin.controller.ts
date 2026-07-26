@@ -1,12 +1,30 @@
 import type { Response } from "express";
 import { User } from "../models/User.js";
 import { sendSuccess, sendError, sendPaginated } from "../utils/response.js";
+import { qInt } from "../utils/query.js";
 import type { AuthRequest } from "../types/index.js";
+
+// ─── POST /admin/users ────────────────────────────────────────────────────────
+// Admin creates a doctor/admin account (self-registration is disabled).
+export async function createUser(req: AuthRequest, res: Response): Promise<void> {
+  const { name, email, phone, password, role, qualification, registrationNo, clinicName } = req.body;
+
+  const exists = await User.findOne({ email });
+  if (exists) { sendError(res, "A user with this email already exists.", 409); return; }
+
+  const user = await User.create({
+    name, email, phone, password,
+    role: role === "admin" ? "admin" : "doctor",
+    qualification, registrationNo, clinicName,
+  });
+
+  sendSuccess(res, { user }, "User account created", 201);
+}
 
 // ─── GET /admin/users ─────────────────────────────────────────────────────────
 export async function listUsers(req: AuthRequest, res: Response): Promise<void> {
-  const page  = Math.max(parseInt(req.query.page as string ?? "1"), 1);
-  const limit = Math.min(parseInt(req.query.limit as string ?? "20"), 100);
+  const page  = Math.max(qInt(req.query.page, 1), 1);
+  const limit = Math.min(Math.max(qInt(req.query.limit, 20), 1), 100);
   const skip  = (page - 1) * limit;
 
   const [users, total] = await Promise.all([

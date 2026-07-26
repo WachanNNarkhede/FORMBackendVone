@@ -15,12 +15,21 @@ const COOKIE_OPTS = {
   path:     "/",
 };
 
-const LOGIN_MAX_ATTEMPTS = 10;
-const LOCK_DURATION      = 3 * 6 * 10;
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOCK_DURATION      = 30 * 60 * 1000;
 
 // ─── Register ─────────────────────────────────────────────────────────────────
 export async function register(req: Request, res: Response): Promise<void> {
   const { name, email, phone, password, qualification, registrationNo, clinicName } = req.body;
+
+  // ── Public self-registration is only allowed to bootstrap the FIRST admin.
+  //    After that, accounts are created by an admin (POST /admin/users). This
+  //    prevents strangers from registering and reading patient data. ──────────
+  const userCount = await User.countDocuments();
+  if (userCount > 0) {
+    sendError(res, "Self-registration is disabled. Ask an administrator to create your account.", 403);
+    return;
+  }
 
   const exists = await User.findOne({ email });
   if (exists) {
@@ -28,9 +37,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  // ── First user ever → becomes admin automatically ─────────────────────────
-  const userCount = await User.countDocuments();
-  const role = userCount === 0 ? "admin" : "doctor";
+  const role = "admin"; // first user ever
 
   const user = await User.create({
     name, email, phone, password,
@@ -38,9 +45,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     role,
   });
 
-  if (role === "admin") {
-    console.log(`\n🔑  First user registered — granted ADMIN role: ${email}\n`);
-  }
+  console.log(`\n🔑  First user registered — granted ADMIN role: ${email}\n`);
 
   const accessToken  = signAccessToken({ userId: user._id.toString(), role: user.role });
   const refreshToken = signRefreshToken({ userId: user._id.toString(), role: user.role });

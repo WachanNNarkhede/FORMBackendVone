@@ -33,11 +33,34 @@ if (!parsed.success) {
   process.exit(1);
 }
 
+const IS_PROD = parsed.data.NODE_ENV === "production";
+
+// ── Production safety checks — refuse to boot with insecure secrets ───────────
+if (IS_PROD) {
+  const weak = [
+    "qwertyuiopasdfghjklpoiuytrewqbhu",
+    "qwertyuiopasdfghjklpoiuytrewqasd",
+    "changeme", "secret", "your-secret",
+  ];
+  const problems: string[] = [];
+  if (weak.includes(parsed.data.JWT_SECRET))         problems.push("JWT_SECRET is a known weak/default value");
+  if (weak.includes(parsed.data.JWT_REFRESH_SECRET)) problems.push("JWT_REFRESH_SECRET is a known weak/default value");
+  if (parsed.data.JWT_SECRET === parsed.data.JWT_REFRESH_SECRET) problems.push("JWT_SECRET and JWT_REFRESH_SECRET must differ");
+  if (parsed.data.COOKIE_SECURE !== "true")          problems.push("COOKIE_SECURE must be 'true' in production (HTTPS-only cookies)");
+  if (problems.length) {
+    console.error("❌  Refusing to start in production — insecure configuration:");
+    problems.forEach((p) => console.error(`   • ${p}`));
+    console.error("   Generate secrets with: node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\"");
+    process.exit(1);
+  }
+}
+
 export const env = {
   ...parsed.data,
   PORT:          parseInt(parsed.data.PORT, 10),
   EMAIL_PORT:    parseInt(parsed.data.EMAIL_PORT, 10),
-  COOKIE_SECURE: parsed.data.COOKIE_SECURE === "true",
+  // Always send Secure cookies in production, even if the env var was left unset
+  COOKIE_SECURE: parsed.data.COOKIE_SECURE === "true" || IS_PROD,
   EMAIL_SECURE:  parsed.data.EMAIL_SECURE === "true",
-  IS_PROD:       parsed.data.NODE_ENV === "production",
+  IS_PROD,
 } as const;

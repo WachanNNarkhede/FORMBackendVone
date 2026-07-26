@@ -18,36 +18,44 @@ async function getTransporter(): Promise<Transporter> {
 
   if (env.EMAIL_HOST && env.EMAIL_USER && env.EMAIL_PASS) {
     // ── Real SMTP (Gmail, Resend, etc.) ──────────────────────────────────────
-    _transporter = nodemailer.createTransport({
-      host:   env.EMAIL_HOST,
-      port:   env.EMAIL_PORT,
-      secure: env.EMAIL_SECURE,          // true = port 465, false = STARTTLS
-      auth: {
-        user: env.EMAIL_USER,
-        pass: env.EMAIL_PASS,            // Gmail: App Password (16 chars, no spaces)
-      },
-    });
+    try {
+      const real = nodemailer.createTransport({
+        host:   env.EMAIL_HOST,
+        port:   env.EMAIL_PORT,
+        secure: env.EMAIL_SECURE,          // true = port 465, false = STARTTLS
+        auth: {
+          user: env.EMAIL_USER,
+          pass: env.EMAIL_PASS,            // Gmail: App Password (16 chars, no spaces)
+        },
+      });
 
-    // Fail fast if credentials are wrong
-    await _transporter.verify();
-    console.log(`📧  Email transport ready (${env.EMAIL_HOST})`);
-  } else {
-    // ── Ethereal (dev/test — zero setup, emails visible in browser) ──────────
-    const testAccount = await nodemailer.createTestAccount();
-    _transporter = nodemailer.createTransport({
-      host:   "smtp.ethereal.email",
-      port:   587,
-      secure: false,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
-    });
-    console.log("📧  Using Ethereal test email (dev mode — no real emails sent)");
-    console.log(`    Inbox: https://ethereal.email/login`);
-    console.log(`    User:  ${testAccount.user}`);
-    console.log(`    Pass:  ${testAccount.pass}`);
+      // Fail fast if the host/credentials are wrong
+      await real.verify();
+      _transporter = real;
+      console.log(`📧  Email transport ready (${env.EMAIL_HOST})`);
+      return _transporter;
+    } catch (err) {
+      // In production a broken SMTP config is fatal — surface it.
+      if (env.IS_PROD) throw err;
+      // In dev, don't block testing — fall back to Ethereal and warn loudly.
+      console.warn(`⚠️  SMTP (${env.EMAIL_HOST}) unavailable — falling back to Ethereal for dev.`);
+      console.warn(`    Reason: ${(err as Error).message}`);
+    }
   }
+
+  // ── Ethereal (dev/test — zero setup, emails visible in browser) ────────────
+  const testAccount = await nodemailer.createTestAccount();
+  _transporter = nodemailer.createTransport({
+    host:   "smtp.ethereal.email",
+    port:   587,
+    secure: false,
+    auth: {
+      user: testAccount.user,
+      pass: testAccount.pass,
+    },
+  });
+  console.log("📧  Using Ethereal test email (dev mode — no real emails sent)");
+  console.log(`    Open the preview URL logged after each send to read the OTP.`);
 
   return _transporter;
 }

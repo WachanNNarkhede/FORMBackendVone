@@ -3,6 +3,7 @@ import { Report } from "../models/Report.js";
 import { Patient } from "../models/Patient.js";
 import { generateReportId, generateSNo } from "../utils/idGenerator.js";
 import { sendSuccess, sendError, sendPaginated } from "../utils/response.js";
+import { qStr, qInt } from "../utils/query.js";
 import type { AuthRequest } from "../types/index.js";
 
 // Escape user input so it can be used safely inside a RegExp
@@ -29,15 +30,15 @@ export async function getSummary(_req: AuthRequest, res: Response): Promise<void
 // ─── GET /reports ─────────────────────────────────────────────────────────────
 // Supports: ?search= &status= &patientId= &from= &to= &sort=(newest|oldest) &page= &limit=
 export async function getReports(req: AuthRequest, res: Response): Promise<void> {
-  const page      = Math.max(parseInt(req.query.page as string ?? "1"), 1);
-  const limit     = Math.min(Math.max(parseInt(req.query.limit as string ?? "20"), 1), 100);
+  const page      = Math.max(qInt(req.query.page, 1), 1);
+  const limit     = Math.min(Math.max(qInt(req.query.limit, 20), 1), 100);
   const skip      = (page - 1) * limit;
-  const status    = req.query.status as string;
-  const patientId = req.query.patientId as string;
-  const q         = (req.query.search as string ?? "").trim();
-  const from      = req.query.from as string;
-  const to        = req.query.to   as string;
-  const sort      = (req.query.sort as string) || "newest";
+  const status    = qStr(req.query.status);
+  const patientId = qStr(req.query.patientId);
+  const q         = qStr(req.query.search).trim();
+  const from      = qStr(req.query.from);
+  const to        = qStr(req.query.to);
+  const sort      = qStr(req.query.sort) || "newest";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filter: Record<string, any> = {};
