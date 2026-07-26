@@ -51,7 +51,11 @@ app.use(cors({
   },
   credentials: true,
   methods:     ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: [
+  "Content-Type",
+  "Authorization",
+  "Cookie",
+],
 }));
 
 // ─── 3. Body parsing (limit size to prevent payload attacks) ──────────────────
