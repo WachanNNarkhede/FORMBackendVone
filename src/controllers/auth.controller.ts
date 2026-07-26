@@ -11,7 +11,7 @@ import type { AuthRequest } from "../types/index.js";
 const COOKIE_OPTS = {
   httpOnly: true,
   secure:   env.COOKIE_SECURE,
-  sameSite: "strict" as const,
+  sameSite: "none" as const,
   path:     "/",
 };
 

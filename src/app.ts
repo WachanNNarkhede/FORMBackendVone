@@ -58,6 +58,11 @@ app.use(cors({
 ],
 }));
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 // ─── 3. Body parsing (limit size to prevent payload attacks) ──────────────────
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
