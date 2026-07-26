@@ -6,18 +6,18 @@ const isDev = !env.IS_PROD;
 
 // Auth routes — strict in prod, relaxed in dev
 export const authLimiter = rateLimit({
-  windowMs:        15 * 60 * 1000,
-  max:             isDev ? 1000 : 5,
+  windowMs:        1 * 1000,
+  max:             isDev ? 1000 : 100,
   standardHeaders: true,
   legacyHeaders:   false,
   handler: (_req, res) => {
-    sendError(res, "Too many attempts. Try again in 15 minutes.", 429);
+    sendError(res, "Too many attempts. Try again in 1 minutes.", 429);
   },
 });
 
 // General API — relaxed in dev
 export const apiLimiter = rateLimit({
-  windowMs:        15 * 60 * 1000,
+  windowMs:        1 * 1000,
   max:             isDev ? 10000 : 100,
   standardHeaders: true,
   legacyHeaders:   false,
