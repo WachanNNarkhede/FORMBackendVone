@@ -79,7 +79,7 @@ if (!env.IS_PROD) {
 }
 
 // ─── 9. Global rate limit ─────────────────────────────────────────────────────
-app.use("/api", apiLimiter);
+// app.use("/api", apiLimiter);
 
 // ─── 10. Routes ───────────────────────────────────────────────────────────────
 app.use("/api/auth",     authRoutes);
