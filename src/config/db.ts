@@ -2,23 +2,30 @@ import mongoose from "mongoose";
 import { env } from "./env.js";
 
 export async function connectDB(): Promise<void> {
-  try {
-    await mongoose.connect(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 30000,   // 30s — Atlas needs more time than local
-      socketTimeoutMS:          45000,
-      connectTimeoutMS:         30000,
-    });
-    console.log(`✅  MongoDB connected: ${mongoose.connection.host}`);
-  } catch (err) {
-    console.error("❌  MongoDB connection failed:", err);
-    process.exit(1);
+  if (mongoose.connection.readyState === 1) {
+    return;
   }
 
-  mongoose.connection.on("error", (err) => {
-    console.error("MongoDB error:", err);
-  });
+  try {
+    await mongoose.connect(env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
+    });
 
-  mongoose.connection.on("disconnected", () => {
-    console.warn("⚠️   MongoDB disconnected — reconnecting...");
-  });
+    console.log(
+      `✅ MongoDB connected: ${mongoose.connection.host}`
+    );
+  } catch (err) {
+    console.error("❌ MongoDB connection failed:", err);
+    throw err;
+  }
 }
+
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB error:", err);
+});
+
+mongoose.connection.on("disconnected", () => {
+  console.warn("⚠️ MongoDB disconnected");
+});
