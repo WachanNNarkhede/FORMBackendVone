@@ -49,100 +49,115 @@ function renderCertificateSheet(ws: ExcelJS.Worksheet, r: any, patient: any): vo
   const eye = e.eye ?? {};
   const d = r.doctor ?? {};
 
-  // Column widths (6 columns)
-  const widths = [22, 13, 13, 18, 13, 14];
+  const idLabel = (!patient.identificationMark && patient.govtIdNumber)
+    ? `${patient.govtIdType || "Govt ID"} No.:`
+    : "Identification Mark:";
+  const idValue = patient.identificationMark || patient.govtIdNumber || "";
+
+  // 7-column grid (A–G) to mirror the clinic template's alignment:
+  // A label · B value · C unit · D mid-label · E mid-value · F right-label · G right-value
+  const widths = [23, 10, 9, 18, 12, 15, 11];
   widths.forEach((w, i) => { ws.getColumn(i + 1).width = w; });
 
-  // Row 1 — S.NO. (top-right, no border)
-  put(ws, "E1", "S.NO.", { bold: true, h: "right" });
-  put(ws, "F1", r.sNo ?? "", { bold: true, h: "left", color: "FFC00000" });
+  // Row 1 — S.No. (top-right, above the form)
+  put(ws, "F1", "S.No.", { bold: true, h: "right" });
+  put(ws, "G1", r.sNo ?? "", { bold: true, h: "left", color: "FFC00000" });
 
   // Row 2 — Title
-  put(ws, "A2:F2", "MEDICAL FITNESS CERTIFICATE FOR SECURITY GUARDS/ SUPERVISOR",
+  put(ws, "A2:G2", "MEDICAL FITNESS CERTIFICATE FOR SECURITY GUARDS/ SUPERVISOR",
       { bold: true, underline: true, h: "center", size: 11 });
 
   // Rows 3–7 — patient / employee details
-  put(ws, "A3", "Company Name:");            put(ws, "B3:C3", patient.company ?? "");
-  put(ws, "D3", "Employee id no:");          put(ws, "E3:F3", patient.empId ?? "");
+  put(ws, "A3", "Company Name:");        put(ws, "B3:E3", patient.company ?? "");
+  put(ws, "F3", "Employee id no:");      put(ws, "G3", patient.empId ?? "");
 
-  put(ws, "A4", "Employee Name:");           put(ws, "B4:C4", patient.name ?? "");
-  put(ws, "D4", "Date:");                    put(ws, "E4:F4", r.date ?? "", { color: "FFC00000" });
+  put(ws, "A4", "Employee Name:");       put(ws, "B4:E4", patient.name ?? "", { bold: true });
+  put(ws, "F4", "Date:");                put(ws, "G4", r.date ?? "", { color: "FFC00000" });
 
-  put(ws, "A5", "Age:");                     put(ws, "B5", patient.age != null ? `${patient.age}  Years` : "Years");
-  put(ws, "C5", "Gender:");                  put(ws, "D5", patient.gender ?? "");
-  put(ws, "E5", "Blood Group:");             put(ws, "F5", patient.bloodGroup ?? "");
+  put(ws, "A5", "Age:");                 put(ws, "B5", patient.age ?? "", { h: "center" });
+  put(ws, "C5", "Years");                put(ws, "D5", "Gender:");
+  put(ws, "E5", patient.gender ?? "");   put(ws, "F5", "Blood Group:");
+  put(ws, "G5", patient.bloodGroup ?? "");
 
-  put(ws, "A6", "Address:");                 put(ws, "B6:F6", patient.address ?? "");
+  put(ws, "A6", "Address:");             put(ws, "B6:G6", patient.address ?? "");
 
-  put(ws, "A7", "Designation:");             put(ws, "B7:C7", patient.designation ?? "");
-  put(ws, "D7", "Identification Mark");      put(ws, "E7:F7", patient.identificationMark ?? "");
+  put(ws, "A7", "Designation:");         put(ws, "B7:C7", patient.designation ?? "");
+  put(ws, "D7", idLabel);                put(ws, "E7:G7", idValue);
 
   // Row 8 — section header
-  put(ws, "A8:F8", "GENERAL EXAMINATION", { bold: true, underline: true, h: "center" });
+  put(ws, "A8:G8", "GENERAL EXAMINATION", { bold: true, underline: true, h: "center" });
 
   // Rows 9–14 — vitals
-  put(ws, "A9",  "Pulse rate:");  put(ws, "B9",  v.pulseRate ?? "");                          put(ws, "C9",  "/min");
-  put(ws, "D9:F9", "");
-  put(ws, "A10", "B.P.:");        put(ws, "B10", (v.bpSystolic != null && v.bpDiastolic != null) ? `${v.bpSystolic}/${v.bpDiastolic}` : ""); put(ws, "C10", "mmHg");
-  put(ws, "D10:F10", "");
-  put(ws, "A11", "Height:");      put(ws, "B11", v.heightMetres ?? "");                        put(ws, "C11", "metres");
-  put(ws, "D11", "Chest Inflation:"); put(ws, "E11", v.chestInflationCm ?? "");                put(ws, "F11", "cm");
-  put(ws, "A12", "Weight:");      put(ws, "B12", v.weightKg ?? "");                            put(ws, "C12", "kg");
-  put(ws, "D12", "BMI:");         put(ws, "E12", v.bmi ?? "");                                 put(ws, "F12", "kg/sq.m");
-  put(ws, "A13", "Temperature:"); put(ws, "B13", v.temperatureF ?? "");                        put(ws, "C13", "°F");
-  put(ws, "D13:F13", "");
-  put(ws, "A14", "SpO2:");        put(ws, "B14", v.spo2Percent ?? "");                          put(ws, "C14", "%");
-  put(ws, "D14:F14", "");
+  put(ws, "A9",  "Pulse rate:");  put(ws, "B9",  v.pulseRate ?? "", { h: "center" });  put(ws, "C9",  "/min");   put(ws, "D9:G9", "");
+  put(ws, "A10", "B.P.");         put(ws, "B10", (v.bpSystolic != null && v.bpDiastolic != null) ? `${v.bpSystolic}/${v.bpDiastolic}` : "", { h: "center" }); put(ws, "C10", "mmHg"); put(ws, "D10:G10", "");
+  put(ws, "A11", "Height:");      put(ws, "B11", v.heightMetres ?? "", { h: "center" }); put(ws, "C11", "metres");
+  put(ws, "D11", "Chest Inflation:"); put(ws, "E11:G11", v.chestInflationCm != null ? `${v.chestInflationCm} cm` : "");
+  put(ws, "A12", "Weight:");      put(ws, "B12", v.weightKg ?? "", { h: "center" }); put(ws, "C12", "kg");
+  put(ws, "D12", "BMI:");         put(ws, "E12", v.bmi ?? "", { h: "center" });        put(ws, "F12:G12", "kg/sq.m");
+  put(ws, "A13", "Temperature:"); put(ws, "B13", v.temperatureF ?? "", { h: "center" }); put(ws, "C13", "°F");  put(ws, "D13:G13", "");
+  put(ws, "A14", "SpO2:");        put(ws, "B14", v.spo2Percent ?? "", { h: "center" });   put(ws, "C14", "%");   put(ws, "D14:G14", "");
 
   // Rows 15–21 — single-line examination findings
-  put(ws, "A15", "Pallor/ Icterus:");        put(ws, "B15:F15", e.pallor ?? "");
-  put(ws, "A16", "Lymphadenopathy:");        put(ws, "B16:F16", e.lymphadenopathy ?? "");
-  put(ws, "A17", "Respiratory system:");     put(ws, "B17:F17", e.respiratorySystem ?? "");
-  put(ws, "A18", "Heart:");                  put(ws, "B18:F18", e.heart ?? "");
-  put(ws, "A19", "Abdomen:");                put(ws, "B19:F19", e.abdomen ?? "");
-  put(ws, "A20", "Central Nervous system:"); put(ws, "B20:F20", e.cns ?? "");
-  put(ws, "A21", "Physical Handicapped:");   put(ws, "B21:F21", e.physicalHandicapped ?? "");
+  put(ws, "A15", "Pallor/ Icterus:");        put(ws, "B15:G15", e.pallor ?? "");
+  put(ws, "A16", "Lymphadenopathy:");        put(ws, "B16:G16", e.lymphadenopathy ?? "");
+  put(ws, "A17", "Respiratory system:");     put(ws, "B17:G17", e.respiratorySystem ?? "");
+  put(ws, "A18", "Heart:");                  put(ws, "B18:G18", e.heart ?? "");
+  put(ws, "A19", "Abdomen:");                put(ws, "B19:G19", e.abdomen ?? "");
+  put(ws, "A20", "Central Nervous system:"); put(ws, "B20:G20", e.cns ?? "");
+  put(ws, "A21", "Physical Handicapped:");   put(ws, "B21:G21", e.physicalHandicapped ?? "");
 
   // Rows 22–24 — Eye + Ear
-  put(ws, "A22:A23", "Eye:");
-  put(ws, "B22", "A) Distant Vision:");      put(ws, "C22:F22", `Right: ${eye.distantVisionRight ?? "6/6"}     left: ${eye.distantVisionLeft ?? "6/6"}`);
-  put(ws, "B23", "B) Night Blindness:");     put(ws, "C23:F23", eye.nightBlindness ?? "");
-  put(ws, "A24", "(Ear) Basic hearing ability"); put(ws, "B24", e.hearingAbility ?? "");
-  put(ws, "C24:F24", `C) Colour vision: ${eye.colourVision ?? "Normal"}`);
+  put(ws, "A22:A23", "Eye:", { v: "top" });
+  put(ws, "B22:C22", "A) Distant Vision:");  put(ws, "D22:G22", `Right: ${eye.distantVisionRight ?? "6/6"}    left:${eye.distantVisionLeft ?? "6/6"}`);
+  put(ws, "B23:C23", "B) Night Blindness:"); put(ws, "D23:G23", eye.nightBlindness ?? "");
+  put(ws, "A24:B24", "(Ear) Basic hearing ability:", { wrap: false });
+  put(ws, "C24:D24", e.hearingAbility ?? "");
+  put(ws, "E24:G24", `C) Colour vision: ${eye.colourVision ?? "Normal"}`);
 
-  // Rows 25–27 — communicable / covid
-  put(ws, "A25:D25", "Is The Person Suspecting Any Communicable"); put(ws, "E25:F25", e.communicableDisease ?? "No");
-  put(ws, "A26:D26", "Or Infectious Disease:");                    put(ws, "E26:F26", e.communicableDisease === "Yes" ? `If Yes: ${e.communicableDiseaseDesc ?? ""}` : "If Yes, description:");
-  put(ws, "A27:E27", "Any sign and symptom of Cough, cold, fever & difficulty in breathing i.e. Covid-19:"); put(ws, "F27", e.covid19Symptoms ?? "No");
+  // Rows 25–26 — communicable
+  put(ws, "A25:E25", "Is The Person Suspecting Any Communicable Or Infectious", { wrap: false });
+  put(ws, "F25:G25", e.communicableDisease ?? "No");
+  put(ws, "A26:E26", "Disease:");
+  put(ws, "F26:G26", e.communicableDisease === "Yes" ? (e.communicableDiseaseDesc || "Yes") : "If Yes, description:");
 
-  // Row 28 — remarks
-  put(ws, "A28:C28", "Remarks if any:"); put(ws, "D28:F28", e.remarks ?? "Nil", { bold: true });
+  // Row 27 — covid
+  put(ws, "A27:F27", "Any sign and symptom of Cough, cold, fever & difficulty in breathing i.e. Covid-19 :", { wrap: false });
+  put(ws, "G27", e.covid19Symptoms ?? "No");
 
-  // Row 29 — Medical Fitness header
-  put(ws, "A29:F29", "Medical Fitness", { bold: true, underline: true, h: "center" });
+  // Row 28 — blank spacer
+  put(ws, "A28:G28", "");
 
-  // Rows 30–33 — certification paragraph
-  const certify =
-    `This Is To Certify That Mr/Mrs ${patient.name ?? ""}\n` +
-    `Employeed at ${patient.company ?? ""} Has Been Carefully Examined By Me\n` +
-    `On Date ${r.date ?? ""} Based On The Medical Examination Conducted,\n` +
-    `Found Free From obvious Infectious Diseases & He/she is physically and mentally " FIT " in this organization.`;
-  put(ws, "A30:F33", certify, { v: "top" });
+  // Row 29 — remarks
+  put(ws, "A29:C29", "Remarks if any:"); put(ws, "D29:G29", e.remarks ?? "Nil", { bold: true });
 
-  // Rows 34–37 — signature block (bottom-right)
-  put(ws, "A34:F34", "");
-  put(ws, "D35:F35", "Signature of Doctor:");
-  put(ws, "D36:F36", `Name Of Doctor: ${d.name ?? ""}`);
-  put(ws, "D37:F37", `Registration Number: ${d.registrationNumber ?? ""}`);
+  // Row 30 — Medical Fitness header
+  put(ws, "A30:G30", "Medical Fitness", { bold: true, underline: true, h: "center" });
+
+  // Rows 31–35 — certification (each sentence on its own row, full wording)
+  put(ws, "A31:G31", `This Is To Certify That Mr/Mrs        ${patient.name ?? ""}`, { wrap: false });
+  put(ws, "A32:G32", `Employeed at        ${patient.company ?? ""}        Has Been Carefully Examined By Me`, { wrap: false });
+  put(ws, "A33:G33", `On Date        ${r.date ?? ""}        Based On The Medical Examination Conducted, He/She is`, { wrap: false });
+  put(ws, "A34:G34", `Found Free From obvious Infectious Diseases & He/she is physically and mentally " FIT " to work`, { wrap: false });
+  put(ws, "A35:G35", "in this organization.", { wrap: false });
+
+  // Row 36 — blank spacer
+  put(ws, "A36:G36", "");
+
+  // Rows 37–39 — signature block (bottom-right)
+  put(ws, "D37:G37", "Signature of Doctor:");
+  put(ws, "D38:G38", `Name Of Doctor: ${d.name ?? ""}`);
+  put(ws, "D39:G39", `Registration Number: ${d.registrationNumber ?? ""}`);
 
   // Row heights
-  ws.getRow(2).height  = 24;
-  [30, 31, 32, 33].forEach((n) => { ws.getRow(n).height = 16; });
-  ws.getRow(34).height = 18;
+  ws.getRow(2).height = 22;
+  [22, 23].forEach((n) => { ws.getRow(n).height = 16; });
+  ws.getRow(30).height = 18;
+  [31, 32, 33, 34, 35].forEach((n) => { ws.getRow(n).height = 15; });
+  [37, 38, 39].forEach((n) => { ws.getRow(n).height = 16; });
 
-  // Borders across the whole form (rows 2–37, cols A–F)
-  for (let row = 2; row <= 37; row++) {
-    for (let col = 1; col <= 6; col++) {
+  // Borders across the whole form (rows 2–39, cols A–G)
+  for (let row = 2; row <= 39; row++) {
+    for (let col = 1; col <= 7; col++) {
       ws.getCell(row, col).border = {
         top:    { style: "thin", color: { argb: "FF808080" } },
         left:   { style: "thin", color: { argb: "FF808080" } },
@@ -152,7 +167,12 @@ function renderCertificateSheet(ws: ExcelJS.Worksheet, r: any, patient: any): vo
     }
   }
 
-  ws.pageSetup = { orientation: "portrait", fitToPage: true, margins: {
+  // Note — below the form, no border (matches the template footer)
+  put(ws, "A41:G41",
+    "Note: This Certificate Has Been Issued On Interest/Demand Of The Applicant For Issuing Medical Fitness. Not For Medicolegal Purpose.",
+    { bold: true, h: "center", size: 8 });
+
+  ws.pageSetup = { orientation: "portrait", fitToPage: true, printArea: "A1:G41", margins: {
     left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3,
   } };
 }
@@ -297,10 +317,14 @@ export async function exportCertificate(req: AuthRequest, res: Response): Promis
     doc.lineWidth(0.7).rect(LEFT + 150, y, 140, h).stroke();
     doc.lineWidth(0.7).rect(LEFT + 290, y, 110, h).stroke();
     doc.lineWidth(0.7).rect(LEFT + 400, y, 115, h).stroke();
+    const idLabel = (!patient.identificationMark && patient.govtIdNumber)
+      ? `${patient.govtIdType || "Govt ID"} No.:`
+      : "Identification Mark:";
+    const idValue = str(patient.identificationMark) || str(patient.govtIdNumber);
     doc.font("Helvetica").fontSize(9).fillColor("#000").text("Designation:", LEFT + 4, y + 7, { lineBreak: false });
     doc.text(str(patient.designation), LEFT + 154, y + 7, { width: 132, lineBreak: false });
-    doc.text("Identification Mark:", LEFT + 294, y + 7, { width: 104, lineBreak: false });
-    doc.fontSize(8).text(str(patient.identificationMark), LEFT + 404, y + 4, { width: 107 });
+    doc.text(idLabel, LEFT + 294, y + 7, { width: 104, lineBreak: false });
+    doc.fontSize(8).text(idValue, LEFT + 404, y + 4, { width: 107 });
     y += h;
   }
   bandHeader("GENERAL EXAMINATION", 15);

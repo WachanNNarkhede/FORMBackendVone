@@ -11,7 +11,10 @@ import type { AuthRequest } from "../types/index.js";
 const COOKIE_OPTS = {
   httpOnly: true,
   secure:   env.COOKIE_SECURE,
-  sameSite: "none" as const,
+  // Cross-site in production (frontend + API on different domains) needs
+  // SameSite=None + Secure so the browser sends the auth cookie on API calls.
+  // Locally (same-site localhost, http) use Lax so the cookie still sets.
+  sameSite: (env.IS_PROD ? "none" : "lax") as "none" | "lax",
   path:     "/",
 };
 

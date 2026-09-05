@@ -15,6 +15,7 @@ import patientRoutes from "./routes/patient.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import exportRoutes from "./routes/export.routes.js";
 import adminRoutes  from "./routes/admin.routes.js";
+import designationRoutes from "./routes/designation.routes.js";
 
 const app = express();
 
@@ -51,17 +52,8 @@ app.use(cors({
   },
   credentials: true,
   methods:     ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-  "Content-Type",
-  "Authorization",
-  "Cookie",
-],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
-
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
 
 // ─── 3. Body parsing (limit size to prevent payload attacks) ──────────────────
 app.use(express.json({ limit: "10kb" }));
@@ -84,7 +76,7 @@ if (!env.IS_PROD) {
 }
 
 // ─── 9. Global rate limit ─────────────────────────────────────────────────────
-// app.use("/api", apiLimiter);
+app.use("/api", apiLimiter);
 
 // ─── 10. Routes ───────────────────────────────────────────────────────────────
 app.use("/api/auth",     authRoutes);
@@ -92,6 +84,7 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/reports",  reportRoutes);
 app.use("/api/export",   exportRoutes);
 app.use("/api/admin",    adminRoutes);
+app.use("/api/designations", designationRoutes);
 
 // ─── 11. Health check ─────────────────────────────────────────────────────────
 app.get("/health", (_req, res) => {

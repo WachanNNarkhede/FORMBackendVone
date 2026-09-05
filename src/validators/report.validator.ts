@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 // ─── Patient ──────────────────────────────────────────────────────────────────
-export const createPatientSchema = z.object({
+// Base object (used with .partial() for updates)
+export const patientFields = z.object({
   name:               z.string().min(1).max(200).trim(),
   empId:              z.string().min(1).max(50).trim(),
   company:            z.string().min(1).max(200).trim(),
@@ -11,7 +12,15 @@ export const createPatientSchema = z.object({
   address:            z.string().max(300).trim().default(""),
   designation:        z.string().max(100).trim().default(""),
   identificationMark: z.string().max(200).trim().default(""),
+  govtIdType:         z.enum(["", "Aadhaar", "PAN", "Driving Licence", "Other"]).default(""),
+  govtIdNumber:       z.string().max(50).trim().default(""),
 });
+
+// Create requires an identity: either an identification mark OR a government ID number
+export const createPatientSchema = patientFields.refine(
+  (d) => !!(d.identificationMark?.trim() || d.govtIdNumber?.trim()),
+  { message: "Provide an Identification Mark or a Government ID", path: ["identificationMark"] }
+);
 
 // ─── Vitals — relaxed ranges for real-world values ────────────────────────────
 const vitalsSchema = z.object({

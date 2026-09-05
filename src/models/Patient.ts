@@ -12,6 +12,8 @@ export interface IPatient {
   address:            string;
   designation:        string;
   identificationMark: string;
+  govtIdType:         "" | "Aadhaar" | "PAN" | "Driving Licence" | "Other";
+  govtIdNumber:       string;
   createdBy:          mongoose.Types.ObjectId;  // ref: User
   createdAt:          Date;
   updatedAt:          Date;
@@ -29,6 +31,8 @@ const patientSchema = new Schema<IPatient>(
     address:            { type: String, trim: true, default: "" },
     designation:        { type: String, trim: true, default: "" },
     identificationMark: { type: String, trim: true, default: "" },
+    govtIdType:         { type: String, enum: ["", "Aadhaar", "PAN", "Driving Licence", "Other"], default: "" },
+    govtIdNumber:       { type: String, trim: true, default: "", maxlength: 50 },
     createdBy:          { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }

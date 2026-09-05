@@ -5,7 +5,7 @@ import {
 } from "../controllers/patient.controller.js";
 import { authenticate, requireAdmin } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
-import { createPatientSchema } from "../validators/report.validator.js";
+import { createPatientSchema, patientFields } from "../validators/report.validator.js";
 
 const router = Router();
 
@@ -15,7 +15,7 @@ router.use(authenticate);
 router.get( "/",                    getPatients);
 router.post("/",    validate(createPatientSchema), createPatient);
 router.get( "/:id",                 getPatient);
-router.put( "/:id", requireAdmin, validate(createPatientSchema.partial()), updatePatient);
+router.put( "/:id", requireAdmin, validate(patientFields.partial()), updatePatient);
 router.delete("/:id", requireAdmin, deletePatient);
 router.get( "/:id/reports",         getPatientReports);
 
