@@ -38,6 +38,7 @@ const allowedOrigins = [
   env.FRONTEND_URL.replace(/\/$/, "") + "/",     // with trailing slash
   "http://localhost:3000",
   "http://localhost:5173",
+  "https://form-frontend-vone.vercel.app"
 ];
 
 app.use(cors({
